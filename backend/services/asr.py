@@ -7,7 +7,11 @@ _client: openai.AsyncOpenAI | None = None
 def get_client() -> openai.AsyncOpenAI:
     global _client
     if _client is None:
-        _client = openai.AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        kwargs: dict = {"api_key": os.environ["OPENAI_API_KEY"]}
+        base_url = os.environ.get("OPENAI_BASE_URL")
+        if base_url:
+            kwargs["base_url"] = base_url
+        _client = openai.AsyncOpenAI(**kwargs)
     return _client
 
 

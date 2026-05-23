@@ -1,8 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { DEMO_CASES } from '@/lib/constants'
+import { diagnose, extractVideo } from '@/lib/api'
 
 const SCENARIOS = [
   {
@@ -47,8 +49,15 @@ const fade = (delay = 0) => ({
   transition: { duration: 0.55, delay, ease: [0.25, 0.1, 0.25, 1] },
 })
 
+type AnalyzeStage = 'idle' | 'extracting' | 'diagnosing'
+
 export default function HomePage() {
   const router = useRouter()
+  const [input, setInput] = useState('')
+  const [stage, setStage] = useState<AnalyzeStage>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  const isLoading = stage !== 'idle'
 
   const handleDemoClick = async (demoId: string) => {
     const res = await fetch(`/demo/${demoId}.json`)
@@ -57,12 +66,47 @@ export default function HomePage() {
     router.push(`/analyze/${demoId}`)
   }
 
+  const handleAnalyze = async () => {
+    const value = input.trim()
+    if (!value || isLoading) return
+
+    setError(null)
+    setStage('extracting')
+
+    try {
+      const videoContent = await extractVideo(value)
+      setStage('diagnosing')
+      const diagnosis = await diagnose(videoContent)
+
+      sessionStorage.setItem(
+        'demoData',
+        JSON.stringify({ videoContent, diagnosis })
+      )
+      router.push(`/analyze/${videoContent.video_id}`)
+    } catch (err: unknown) {
+      const apiErr = err as { error?: string; code?: string; fallback_available?: boolean }
+      if (apiErr?.code === 'EXTRACT_FAILED' && apiErr.fallback_available) {
+        setError('链接解析失败，请粘贴完整分享文本，或改用下方 Demo 案例体验。')
+      } else {
+        setError(apiErr?.error || '分析失败，请检查后端是否已启动并重试。')
+      }
+      setStage('idle')
+    }
+  }
+
+  const statusText =
+    stage === 'extracting'
+      ? '正在解析抖音链接…（通常 2-5 秒）'
+      : stage === 'diagnosing'
+        ? 'AI 正在诊断内容…'
+        : null
+
   return (
-    <div className="min-h-screen bg-[#080808]">
+    <motion.div className="min-h-screen bg-[#080808]">
 
       {/* ── Navbar ── */}
       <nav className="fixed inset-x-0 top-0 z-50 h-16 border-b border-white/[0.06] bg-[#080808]/85 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6 lg:px-10">
+        <motion.div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6 lg:px-10">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
               <span className="text-black font-black text-xs leading-none select-none">眼</span>
@@ -76,15 +120,14 @@ export default function HomePage() {
             <button className="hover:text-white transition-colors duration-200">关于产品</button>
             <button className="hover:text-white transition-colors duration-200">使用教程</button>
           </div>
-        </div>
+        </motion.div>
       </nav>
 
       {/* ── Hero ── */}
       <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-16">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <motion.div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="w-[720px] h-[520px] rounded-full bg-amber-500/[0.055] blur-[110px] -translate-y-12" />
-        </div>
+        </motion.div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-10 text-center py-24">
           <motion.div {...fade(0.05)}>
@@ -121,19 +164,34 @@ export default function HomePage() {
           {/* Input bar */}
           <motion.div {...fade(0.28)} className="max-w-2xl mx-auto mb-5">
             <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#111] border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.02)]">
-              <div className="flex flex-1 items-center gap-2.5 px-4 py-2.5 text-neutral-600 text-sm cursor-default select-none">
-                <svg className="w-4 h-4 shrink-0 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-1 items-center gap-2.5 px-3 py-2.5 min-w-0">
+                <svg className="w-4 h-4 shrink-0 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
-                粘贴任何平台的视频链接，这里就是你的个人识别器
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                  placeholder="粘贴抖音分享链接或完整分享文本"
+                  disabled={isLoading}
+                  className="w-full bg-transparent text-sm text-white placeholder:text-neutral-600 outline-none disabled:opacity-60"
+                />
               </div>
               <button
-                onClick={() => alert('当前为 Demo 演示模式，请点击下方案例体验完整流程 ↓')}
-                className="shrink-0 px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold text-sm transition-all duration-200 whitespace-nowrap shadow-[0_4px_20px_rgba(245,158,11,0.3)]"
+                onClick={handleAnalyze}
+                disabled={isLoading || !input.trim()}
+                className="shrink-0 px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-sm transition-all duration-200 whitespace-nowrap shadow-[0_4px_20px_rgba(245,158,11,0.3)]"
               >
-                立刻分析
+                {isLoading ? '分析中…' : '立刻分析'}
               </button>
             </div>
+            {statusText && (
+              <p className="mt-3 text-xs text-amber-400/80 animate-pulse">{statusText}</p>
+            )}
+            {error && (
+              <p className="mt-3 text-xs text-red-400/90 leading-relaxed">{error}</p>
+            )}
           </motion.div>
 
           <motion.p {...fade(0.36)} className="text-neutral-700 text-sm">
@@ -159,9 +217,9 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.55 + i * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
               className={`group p-6 rounded-2xl bg-[#0f0f0f] border border-white/[0.06] transition-all duration-300 ${s.accent}`}
             >
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 border ${s.iconBg}`}>
+              <motion.div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 border ${s.iconBg}`}>
                 {s.icon}
-              </div>
+              </motion.div>
               <h3 className="font-semibold text-white text-sm leading-snug mb-2">{s.title}</h3>
               <p className="text-xs text-neutral-600 leading-relaxed">{s.desc}</p>
             </motion.div>
@@ -176,7 +234,7 @@ export default function HomePage() {
           <span className="text-xs text-neutral-600">{DEMO_CASES.length} 个 · 点击直接体验</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {DEMO_CASES.map((c, i) => {
             const badge = TYPE_BADGE[c.label] ?? 'text-neutral-400 bg-neutral-400/10 border-neutral-400/25'
             const thumbGrad = DEMO_THUMB_GRADIENT[c.id] ?? 'from-neutral-500/10 to-[#0f0f0f]'
@@ -191,7 +249,6 @@ export default function HomePage() {
                            hover:border-amber-500/30 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(245,158,11,0.06)]
                            active:scale-[0.98] transition-all duration-300"
               >
-                {/* Thumbnail */}
                 <div className={`w-full aspect-video rounded-xl bg-gradient-to-br ${thumbGrad} mb-5 relative overflow-hidden border border-white/[0.05] group-hover:border-amber-500/15 transition-colors`}>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-5xl">{c.icon}</span>
@@ -199,20 +256,15 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
 
-                {/* Type badge */}
                 <div className="mb-3">
                   <span className={`text-xs px-2.5 py-1 rounded-full border font-semibold inline-block ${badge}`}>
                     {c.label}
                   </span>
                 </div>
 
-                {/* Title */}
                 <h3 className="font-bold text-white text-sm leading-snug mb-2">{c.title}</h3>
-
-                {/* Description */}
                 <p className="text-xs text-neutral-600 leading-relaxed mb-4">{c.description}</p>
 
-                {/* CTA */}
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 group-hover:text-amber-400 transition-colors duration-200">
                   开始分析
                   <span className="inline-block group-hover:translate-x-0.5 transition-transform duration-200">→</span>
@@ -220,8 +272,8 @@ export default function HomePage() {
               </motion.button>
             )
           })}
-        </div>
+        </motion.div>
       </section>
-    </div>
+    </motion.div>
   )
 }

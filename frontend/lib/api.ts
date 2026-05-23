@@ -54,6 +54,12 @@ export async function diagnose(video: VideoContent): Promise<DiagnosisResult> {
     title: video.title,
     author: video.author,
     likes: video.likes,
+    play_count: video.play_count,
+    is_ad: video.is_ad,
+    with_shop_entry: video.with_shop_entry,
+    commerce_level: video.commerce_level,
+    creator_verified: video.creator_verified,
+    follower_count: video.follower_count,
   })
 }
 
