@@ -3,16 +3,20 @@ import json
 import anthropic
 from typing import AsyncIterator
 
-_client: anthropic.AsyncAnthropic | None = None
-
-MODEL = "claude-sonnet-4-6"
+MODEL = os.environ.get("CLAUDE_MODEL", "claude-opus-4-6")
 MAX_RETRIES = 3
+
+_client: anthropic.AsyncAnthropic | None = None
 
 
 def get_client() -> anthropic.AsyncAnthropic:
     global _client
     if _client is None:
-        _client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        kwargs: dict = {"api_key": os.environ["ANTHROPIC_API_KEY"]}
+        base_url = os.environ.get("ANTHROPIC_BASE_URL")
+        if base_url:
+            kwargs["base_url"] = base_url
+        _client = anthropic.AsyncAnthropic(**kwargs)
     return _client
 
 
@@ -36,7 +40,6 @@ async def call_claude(
             return text
 
         try:
-            # 处理模型有时用代码块包裹JSON的情况
             if text.startswith("```"):
                 text = text.split("```")[1]
                 if text.startswith("json"):
