@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0f0f0f;
+  color: #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #171717;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 3px;
+}
+
+/* Markdown report styles */
+.report-content h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #262626;
+}
+.report-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.report-content p {
+  color: #d4d4d4;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+.report-content strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+.report-content ul, .report-content ol {
+  margin-left: 1.25rem;
+  margin-bottom: 1rem;
+  color: #d4d4d4;
+}
+.report-content li {
+  line-height: 1.8;
+  margin-bottom: 0.25rem;
+}
+.report-content hr {
+  border-color: #262626;
+  margin: 1.5rem 0;
+}
