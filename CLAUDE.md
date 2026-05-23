@@ -84,15 +84,26 @@ dyhackthon/
 | plan-04 | 问卷 prompt 测试、路由测试（含兜底）、手动 API 质量验证 | ✅ 完成 |
 | plan-05 | 报告 store/router/prompt 测试 + SSE 流式手动验证（52 tests passing） | ✅ 完成 |
 | plan-07 | 前端完整实现：首页 + 诊断页 + 问卷页 + 报告 SSE 页 | ✅ 完成 |
+| design | 前端全页面视觉重构：动画/高斯模糊导航栏/SVG 风险仪表盘/问卷过渡动画 | ✅ 完成 |
 
 ```bash
 # 后端测试状态
 cd backend && .venv/bin/pytest tests/ -v
 # 结果：52 passed in 0.06s
 
-# 前端启动
+# 启动方式（两个终端分别运行）
+cd backend && source .venv/bin/activate && uvicorn main:app --reload --port 8000
 cd frontend && npm run dev   # http://localhost:3000
 ```
+
+### 前端页面一览
+
+| 路由 | 页面 | 关键特性 |
+|---|---|---|
+| `/` | 首页 | 全屏 Hero + 环境光晕 + 3列 Demo 卡片 + Framer 入场动画 |
+| `/analyze/[id]` | 诊断结果 | SVG 速度表风险仪表盘 + 风险等级渐变卡片 |
+| `/chat/[id]` | 个性化问卷 | 真实 AI 生成 + 方向感知滑动过渡 + 点划进度指示 |
+| `/report` | 流式报告 | SSE 实时渲染 + 字数实时计数 + 复制/分享按钮 |
 
 ### 待完成
 
