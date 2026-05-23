@@ -83,22 +83,23 @@ dyhackthon/
 | plan-03 | CDN 脚本、ASR 测试、视频路由测试、Demo JSON 缓存 | ✅ 完成 |
 | plan-04 | 问卷 prompt 测试、路由测试（含兜底）、手动 API 质量验证 | ✅ 完成 |
 | plan-05 | 报告 store/router/prompt 测试 + SSE 流式手动验证（52 tests passing） | ✅ 完成 |
+| plan-07 | 前端完整实现：首页 + 诊断页 + 问卷页 + 报告 SSE 页 | ✅ 完成 |
 
 ```bash
-# 当前测试状态验证
+# 后端测试状态
 cd backend && .venv/bin/pytest tests/ -v
 # 结果：52 passed in 0.06s
+
+# 前端启动
+cd frontend && npm run dev   # http://localhost:3000
 ```
 
-### 待完成（按顺序）
+### 待完成
 
 | Plan | 内容 | 备注 |
 |---|---|---|
 | plan-06 | Tavily 搜索 | 加分项，低优先级，可跳过 |
-| **plan-07** | **前端安装 + 首页（3个视频卡片选择）** | ← 下一步 |
-| plan-08 | 前端诊断结果页（从缓存 JSON 加载） | 不再有实时诊断 |
-| plan-09 | 前端问卷页（调用真实 AI） | 核心 AI 交互 |
-| plan-10 | 前端报告页（SSE 流式 + 分享） | 核心 AI 交互 |
+| — | 端到端联调测试 | 同时启动前后端，走完完整 Demo 流程 |
 
 ---
 
