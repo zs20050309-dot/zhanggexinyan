@@ -1,0 +1,59 @@
+{
+  "videoContent": {
+    "video_id": "demo_1",
+    "transcript": "现在这个就业环境，你都大三了还没找实习，基本上和毕业即失业没区别。你知道你的竞争对手是谁吗？985院校的同学大一就开始实习了。不要觉得大三还早，等你大四再投简历，HR一看你这段空白期直接pass掉。现在私信我，我告诉你怎么在三个月内逆袭。",
+    "title": "大三了还没实习？你已经输了",
+    "author": "职场导师小明",
+    "likes": 120000,
+    "play_count": 680000,
+    "follower_count": 320000,
+    "with_shop_entry": true,
+    "commerce_level": 3,
+    "creator_verified": null,
+    "is_ad": false,
+    "source": "asr"
+  },
+  "diagnosis": {
+    "video_id": "demo_1",
+    "types": ["anxiety_selling"],
+    "types_display": ["焦虑贩卖型"],
+    "risk_score": 82,
+    "risk_level": "high",
+    "core_issue": "视频用'大三'这个时间节点制造了普遍性焦虑，但完全没说明这个结论成立需要哪些前提",
+    "missing_premises": [
+      "专业方向（理工科/文科/艺术的实习节奏完全不同）",
+      "个人规划（考研/就业/出国路径不同）",
+      "已有经验积累情况"
+    ],
+    "emotional_manipulation": "反复使用'输了''空白期''来不及'等绝对化词汇强化焦虑",
+    "commercial_intent": "以'私信我'引导付费咨询或课程购买",
+    "needs_realtime_search": false,
+    "search_query": null
+  },
+  "questions": [
+    {
+      "id": 1,
+      "text": "你现在是什么学历阶段？",
+      "type": "choice",
+      "options": ["大一大二", "大三大四", "研究生", "已工作"]
+    },
+    {
+      "id": 2,
+      "text": "你的目标方向是？",
+      "type": "choice",
+      "options": ["直接就业", "考研/出国", "创业/自由职业", "还没想好"]
+    },
+    {
+      "id": 3,
+      "text": "你目前有实习或相关项目经验吗？",
+      "type": "choice",
+      "options": ["有，比较丰富", "有，但不多", "在找中还没有", "完全没有"]
+    },
+    {
+      "id": 4,
+      "text": "看完这个视频，你当时第一反应是什么？（简短描述）",
+      "type": "text",
+      "options": null
+    }
+  ]
+}

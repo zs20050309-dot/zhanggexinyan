@@ -1,0 +1,53 @@
+{
+  "videoContent": {
+    "video_id": "demo_3",
+    "transcript": "医生不会告诉你的护肤秘密——其实大部分护肤品都是智商税！皮肤科主任私下跟我说，99%的人都用错了护肤品，真正有效的只有这三种成分。很多明星皮肤好，不是因为用贵的，而是用对的。我整理了一份内部清单，关注后私信'护肤'免费领取，另外我们有一款成分党都在用的精华，用了三个月皮肤真的不一样了。",
+    "title": "医生不会告诉你的护肤秘密",
+    "author": "皮肤科内部人士",
+    "likes": 45000,
+    "play_count": 210000,
+    "follower_count": 89000,
+    "with_shop_entry": true,
+    "commerce_level": 3,
+    "creator_verified": null,
+    "is_ad": false,
+    "source": "asr"
+  },
+  "diagnosis": {
+    "video_id": "demo_3",
+    "types": ["pseudo_science_ad"],
+    "types_display": ["伪科普软广型"],
+    "risk_score": 79,
+    "risk_level": "high",
+    "core_issue": "视频声称引用了'皮肤科主任'的内部信息，但无法核实来源，后半段直接推荐购买产品",
+    "missing_premises": [
+      "'皮肤科主任'是谁？无法核实",
+      "'99%的人用错'这个数据来自哪里？",
+      "推荐的'三种成分'是否有研究支持？"
+    ],
+    "emotional_manipulation": "用'内部秘密''医生不会告诉你'制造神秘感和信任感",
+    "commercial_intent": "通过'私信领取清单'引流，推销自有精华产品（账号已开通小店）",
+    "needs_realtime_search": false,
+    "search_query": null
+  },
+  "questions": [
+    {
+      "id": 1,
+      "text": "你目前对护肤的关注程度如何？",
+      "type": "choice",
+      "options": ["护肤重度爱好者", "有基础护肤习惯", "随便用用", "完全不关注"]
+    },
+    {
+      "id": 2,
+      "text": "看完这个视频，你有没有想私信领取那个'清单'？",
+      "type": "choice",
+      "options": ["已经私信了", "想但还没有", "犹豫中", "没有兴趣"]
+    },
+    {
+      "id": 3,
+      "text": "你对'皮肤科主任推荐'这个说法的第一反应是？",
+      "type": "choice",
+      "options": ["觉得很可信", "有点半信半疑", "感觉是营销话术", "完全不信"]
+    }
+  ]
+}

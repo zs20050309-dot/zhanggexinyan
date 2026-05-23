@@ -1,0 +1,59 @@
+{
+  "videoContent": {
+    "video_id": "demo_2",
+    "transcript": "image2一出来，我就知道，设计师的时代结束了。现在客户直接用AI生成图片，不需要设计师了。我认识的一个设计师朋友，上个月直接被公司裁了，就是因为AI。趋势来了你挡不住，现在还不学AI提示词技巧就来不及了。我这里有个课程帮你3个月完成转型，只要699。",
+    "title": "AI绘画已经让设计师失业，赶紧转型",
+    "author": "AI技能培训",
+    "likes": 85000,
+    "play_count": 430000,
+    "follower_count": 156000,
+    "with_shop_entry": true,
+    "commerce_level": 4,
+    "creator_verified": null,
+    "is_ad": false,
+    "source": "asr"
+  },
+  "diagnosis": {
+    "video_id": "demo_2",
+    "types": ["info_gap_harvesting", "anxiety_selling"],
+    "types_display": ["信息差收割型", "焦虑贩卖型"],
+    "risk_score": 88,
+    "risk_level": "critical",
+    "core_issue": "视频以image2发布为真实锚点，但将对特定岗位的影响夸大成了对所有设计师的全面冲击",
+    "missing_premises": [
+      "受影响的设计类型（批量执行类 vs 创意类差异巨大）",
+      "视频声称的'全面失业'时效性是否成立",
+      "699元课程能否真正解决转型问题"
+    ],
+    "emotional_manipulation": "用'时代结束了''来不及了'制造紧迫感，FOMO心态驱动付费",
+    "commercial_intent": "直接推销699元AI转型课程（账号商业化等级4/5，开通小店）",
+    "needs_realtime_search": true,
+    "search_query": "image2 AI设计师失业影响范围 2025"
+  },
+  "questions": [
+    {
+      "id": 1,
+      "text": "你目前从事或正在学习设计相关工作吗？",
+      "type": "choice",
+      "options": ["是，专职设计师", "是，学设计的学生", "设计是副业/爱好", "不是，只是感兴趣"]
+    },
+    {
+      "id": 2,
+      "text": "你的设计工作更偏向哪类？",
+      "type": "choice",
+      "options": ["品牌创意/策略", "UI/交互设计", "批量执行（电商图/广告图）", "插画/概念设计"]
+    },
+    {
+      "id": 3,
+      "text": "你现在有用 AI 工具辅助设计吗？",
+      "type": "choice",
+      "options": ["经常用", "偶尔试过", "想用但还没开始", "完全没用过"]
+    },
+    {
+      "id": 4,
+      "text": "看完视频，你有没有想过报那个699的课？",
+      "type": "choice",
+      "options": ["有，正在考虑", "有过念头但犹豫", "没有，但有点焦虑", "完全没有"]
+    }
+  ]
+}
