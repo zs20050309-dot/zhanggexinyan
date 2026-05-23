@@ -73,7 +73,20 @@ cd backend && .venv/bin/pytest tests/ -v
 # 结果：27 passed in 0.04s
 ```
 
-**Plan-03 CDN 备注**：CDN 解析代码已完整实现，但当前开发环境（Clash fake-ip 模式）下所有国内域名 HTTPS 连接不通（TLS 握手被 reset）。这不影响黑客松演示——Demo 走预缓存 JSON，手动输入作为用户路径降级，CDN 解析代码等网络环境修复后可直接用。
+**Plan-03 CDN 备注（已深度排查，待后续解决）**：
+
+CDN 解析代码逻辑完整，但当前开发环境无法访问 douyin.com / iesdouyin.com 的 HTTPS。
+
+**根本原因**：Clash 对 douyin.com 走 `GEOIP,CN,DIRECT` 直连规则，但 DIRECT 路径下 TLS 握手全部 EOF 失败。bilibili.com 有显式 `DOMAIN-SUFFIX,bilibili.com,DIRECT` 规则且可以正常连接，说明两者 CDN 基础设施不同——Douyin CDN 节点会拒绝当前网络的直连 TLS 请求。
+
+**已排除**：
+- 不是 tls-client / httpx / curl 的 TLS 指纹问题（各种浏览器指纹均失败）
+- 不是代理配置问题（bilibili 同样 DIRECT 但能通）
+- 不是代码 bug（代码逻辑经过验证）
+
+**待尝试的修复方向**：在 Clash 规则中给 Douyin 加专用代理组（不走 DIRECT），或换一个没有这个限制的网络环境（如关掉 Clash 的 fake-ip 模式，或切换到非 Clash 网络下测试）。
+
+**不影响黑客松演示**：Demo 走预缓存 JSON，手动输入路径正常工作。
 
 ### 待完成（按顺序）
 
