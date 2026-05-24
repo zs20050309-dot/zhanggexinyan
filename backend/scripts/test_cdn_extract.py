@@ -21,7 +21,7 @@ from services.video_extractor import (
 )
 
 # ⚠️ 替换为真实的抖音视频链接或分享文本
-TEST_URL = "https://v.douyin.com/替换为真实链接/"
+TEST_URL = "https://v.douyin.com/15ZzY6bMaqc/ a@N.wS eoq:/ 01/13 :2pm"  # 真实分享文案
 
 
 async def main():

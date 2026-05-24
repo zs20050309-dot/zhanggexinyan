@@ -10,23 +10,29 @@
 
 ---
 
-## 演示策略（已调整）
+## 演示策略
 
-**策略变更（2026-05-23）**：放弃实时视频上传/CDN 解析/ASR 转录，改为纯预置数据 + AI 动态交互模式。
+支持**两条平行路径**，演示时可自由切换：
 
-**新的演示流程：**
+### A. Demo 卡片路径（最稳，离线兜底）
 1. 首页展示 3 个预置视频卡片（点击选择）
-2. 点击卡片 → 直接从 `frontend/public/demo/demo_X.json` 加载诊断结果（不调用后端）
-3. 用户看完诊断 → 点击"开始个性化分析"→ 调用真实 AI 生成问卷（`/api/questionnaire/generate`）
-4. 用户回答问题 → 调用真实 AI 流式生成报告（`/api/report/generate`，SSE）
+2. 直接从 `frontend/public/demo/demo_X.json` 加载视频内容 + 诊断结果（不调后端）
+3. 点击"开始个性化分析" → 调真实 AI 生成问卷（`/api/questionnaire/generate`）
+4. 答完 → 调真实 AI 流式生成报告（`/api/report/generate`，SSE）
 
-**保留的 AI 能力（真实调用）：**
-- 问卷动态生成（针对每种视频类型个性化）
-- 报告 SSE 流式生成（根据用户回答个性化）
+### B. 真实 URL 路径（关 VPN 时全功能）
+1. 首页粘贴抖音分享链接 → `/api/video/extract`
+2. 后端流程：清洗 URL → aweme_id（直连 → 镜像 API 兜底）→ 元数据（直连 → xingzhige 兜底）→ ASR Whisper 转录（失败降级到标题+话题）
+3. → `/api/diagnosis`（真实 AI 诊断）→ 问卷 → 报告（同路径 A）
 
-**弃用的功能（代码保留，Demo 不走）：**
-- 视频链接上传 / CDN 解析 / ASR 转录（网络问题 + 时间不够）
-- 实时诊断 AI 调用（Demo 走缓存）
+**网络环境对路径 B 的影响**：
+
+| 环境 | aweme_id | 元数据 | ASR 字幕 | 总耗时 |
+|---|---|---|---|---|
+| 开 VPN（出境 IP） | 镜像 API ✅ | xingzhige ✅ | ❌ 抖音 CDN 不通，降级用 title+hashtags | ~14s |
+| 关 VPN（国内 IP） | 直连 ✅ | 直连 iesdouyin ✅ | ✅ Whisper 转录 80-150 字 | ~12s |
+
+VPN 下 transcript 是 ~50 字的 subtitle 兜底（来自 fallback API 的 title+hashtags），AI 仍能正确分类但会显式声明信息有限。前端 analyze 页会显示 `ℹ 当前分析基于视频标题与话题标签` 提示。
 
 ---
 
@@ -36,8 +42,11 @@
 |---|---|---|
 | Backend | FastAPI + Python 3.10.7 | 8000 |
 | Frontend | Next.js 14 + TypeScript + Tailwind | 3000 |
-| AI | claude-opus-4-6（Anthropic SDK + 中转 relay） | — |
+| AI（诊断/问卷/报告） | claude-opus-4-6（Anthropic SDK + 中转 relay） | — |
+| ASR（视频转字幕） | OpenAI Whisper-1（同一个中转 relay 复用 key） | — |
 | 搜索 | Tavily API（加分项，可选） | — |
+
+**前后端通信**：浏览器走 `/api/*` 相对路径 → Next.js dev server `rewrite` 反代到 `127.0.0.1:8000`。这样浏览器完全不直连 `localhost:8000`，**绕开 Clash/FlClash TUN 模式对本地端口的劫持**。配置在 `frontend/next.config.js`。
 
 ---
 
@@ -56,15 +65,20 @@ dyhackthon/
 │   ├── routers/            # 路由层（video/diagnosis/questionnaire/report/search）
 │   ├── services/           # 服务层（ai_client/report_store 等）
 │   ├── prompts/            # Claude prompt 构建（diagnosis/questionnaire/report）
-│   ├── tests/              # pytest 测试（38个测试，全部通过）
-│   └── scripts/            # 手动测试脚本
+│   ├── services/asr.py     # Whisper 转录（OPENAI_BASE_URL 中转兼容）
+│   ├── services/video_extractor.py  # URL 解析全链路（直连优先 + API 兜底 + 短路缓存）
+│   ├── tests/              # pytest 测试（78 个测试，全部通过）
+│   └── scripts/            # 手动测试脚本（含 test_asr_manual.py）
 ├── frontend/
-│   ├── public/demo/        # 3个 Demo 案例预缓存 JSON（demo_1/2/3.json）
+│   ├── public/demo/        # 3 个 Demo 案例预缓存 JSON（demo_1/2/3.json）
+│   ├── public/images/      # 3 张 Unsplash 案例配图（demo_1/2/3.jpg）
+│   ├── components/         # 共享组件：Logo.tsx / Navbar.tsx
 │   ├── lib/types.ts        # TypeScript 类型定义
 │   ├── lib/api.ts          # 后端 API 调用封装（SSE 流式逻辑在此）
 │   ├── lib/constants.ts    # Demo 案例常量
+│   ├── lib/demoReports.ts  # 3 份预置 markdown 报告（演示兜底）
 │   ├── package.json
-│   └── app/                # Next.js 页面（plan-07 之后创建）
+│   └── app/                # Next.js 页面：/、/analyze/[id]、/chat/[id]、/report、/share/[id]
 ├── docs/
 │   └── plans/              # plan-01 到 plan-10（详细开发计划）
 └── CLAUDE.md               # 本文件
@@ -82,14 +96,22 @@ dyhackthon/
 | plan-02 | AI 客户端、诊断 prompt、诊断路由（全 mock）+ 真实 API 手动验证 | ✅ 完成 |
 | plan-03 | CDN 脚本、ASR 测试、视频路由测试、Demo JSON 缓存 | ✅ 完成 |
 | plan-04 | 问卷 prompt 测试、路由测试（含兜底）、手动 API 质量验证 | ✅ 完成 |
-| plan-05 | 报告 store/router/prompt 测试 + SSE 流式手动验证（52 tests passing） | ✅ 完成 |
+| plan-05 | 报告 store/router/prompt 测试 + SSE 流式手动验证 | ✅ 完成 |
 | plan-07 | 前端完整实现：首页 + 诊断页 + 问卷页 + 报告 SSE 页 | ✅ 完成 |
 | design | 前端全页面视觉重构：动画/高斯模糊导航栏/SVG 风险仪表盘/问卷过渡动画 | ✅ 完成 |
+| design v2 | 视觉再升级：共享 Logo/Navbar、真实 Unsplash 图片、How-it-works 流程区、噪点 + 动态光斑、新建 /share/[id] | ✅ 完成 |
+| URL 模式 | 首页加回真实链接解析流程（`extractVideo` → `diagnose` → 跳转），含手动输入兜底 + 错误态 | ✅ 完成 |
+| Demo 离线兜底 | Demo 案例走真实后端 AI 流程（个性化问卷 + 个性化报告 SSE）；只在 API 失败时静默兜底到预置 markdown，保证演示不挂 | ✅ 完成 |
+| E2E 验证 | 后端三个核心端点（diagnosis/questionnaire/report SSE）真实链路全部跑通，AI 真实引用用户答案做个性化 | ✅ 完成 |
+| ASR 主路径 | OpenAI Whisper（中转）转录 mp4 → transcript=口播逐字稿（关 VPN 时全链路通） | ✅ 完成 |
+| Next.js 反代 | `/api/*` 由 Next dev server `rewrites` → `127.0.0.1:8000`，避开 Clash 对 localhost 的拦截 | ✅ 完成 |
+| 问卷可观测 | `QuestionnaireGenerateResponse.source = 'ai' \| 'fallback'`，AI 失败 `logger.warning(exc_info=True)` 不再静默 | ✅ 完成 |
+| /ping 重置 | `GET /api/video/ping` 现在重置 `_direct_unavailable` 短路标记，用户关 VPN 后无需重启进程即可恢复直连探测 | ✅ 完成 |
 
 ```bash
 # 后端测试状态
-cd backend && .venv/bin/pytest tests/ -v
-# 结果：52 passed in 0.06s
+cd backend && .venv/bin/pytest tests/ -q
+# 结果：78 passed in 7.87s（含网络真实探测的 ping reset 测试 ~7s）
 
 # 启动方式（两个终端分别运行）
 cd backend && source .venv/bin/activate && uvicorn main:app --reload --port 8000
@@ -100,17 +122,24 @@ cd frontend && npm run dev   # http://localhost:3000
 
 | 路由 | 页面 | 关键特性 |
 |---|---|---|
-| `/` | 首页 | 全屏 Hero + 环境光晕 + 3列 Demo 卡片 + Framer 入场动画 |
-| `/analyze/[id]` | 诊断结果 | SVG 速度表风险仪表盘 + 风险等级渐变卡片 |
-| `/chat/[id]` | 个性化问卷 | 真实 AI 生成 + 方向感知滑动过渡 + 点划进度指示 |
-| `/report` | 流式报告 | SSE 实时渲染 + 字数实时计数 + 复制/分享按钮 |
+| `/` | 首页 | Hero 多层光晕 + SVG 噪点 + 三步流程 + 真实链接解析 + Demo 卡片 |
+| `/analyze/[id]` | 诊断结果 | SVG 风险仪表盘 + 风险色调环境光晕 + 类型卡按类型上色 |
+| `/chat/[id]` | 个性化问卷 | AI 实时生成 + 滑动过渡 + 步骤指示器进 Navbar |
+| `/report` | 流式报告 | SSE 实时渲染 + 顶部流光进度条 + 完成态绿色对勾 |
+| `/share/[id]` | 分享报告 | 拉取 `getReport(id)` 只读展示 + "我也来分析一个" 引导 CTA |
+
+### 共享组件
+| 组件 | 文件 | 用途 |
+|---|---|---|
+| `<Logo />` | `frontend/components/Logo.tsx` | SVG 眼睛+放大镜，支持 sm/md 尺寸 + Beta tag |
+| `<Navbar />` | `frontend/components/Navbar.tsx` | hero（滚动磨砂）+ inner（返回+居中Logo+右侧 slot）两种变体 |
 
 ### 待完成
 
 | Plan | 内容 | 备注 |
 |---|---|---|
-| plan-06 | Tavily 搜索 | 加分项，低优先级，可跳过 |
-| — | 端到端联调测试 | 同时启动前后端，走完完整 Demo 流程 |
+| plan-06 | Tavily 搜索 | 代码已写但**无测试 + 无 TAVILY_API_KEY**。加分项，黑客松决定跳过 |
+| 上线部署 | Vercel + Railway / 国内云 | 需修 key 注入 + API base URL + CORS + 报告持久化（当前是内存 dict） |
 
 ---
 
@@ -131,12 +160,36 @@ def get_client():
 
 **.env 需要配置的 key**：
 ```
+# Anthropic（诊断/问卷/报告）
 ANTHROPIC_API_KEY=中转平台的key
 ANTHROPIC_BASE_URL=中转平台的API地址
+
+# OpenAI Whisper（ASR 视频转字幕）— 多数中转和 Anthropic 共用一把 key
+OPENAI_API_KEY=同上
+OPENAI_BASE_URL=同上（代码自动补 /v1 路径）
+
 TAVILY_API_KEY=搜索用（可选）
+
+# 可选：跳过 ASR 走描述文案兜底（演示降级用）
+# SKIP_ASR=true
 ```
 
-**已验证**：claude-opus-4-6 在中转 relay 正常工作。诊断 4 案例（78/82/8/52分）、问卷 3 种类型均通过质量验证。
+**已验证**：claude-opus-4-6 在中转 relay 正常工作；Whisper 在同一中转转录 65KB 中文音频约 3.5 秒得到精准结果。
+
+---
+
+## 已知网络限制 & 关 VPN 操作
+
+**事实**：抖音对境外 IP 拒服务。任何让出口走境外的 VPN（Clash/FlClash TUN 模式开启时即使 bypass localhost 也劫持本机所有出站流量）会导致：
+- ❌ 抖音直连域名（`v.douyin.com` / `iesdouyin.com`）SSL_SYSCALL
+- ❌ 抖音视频 CDN（`douyinvod.com` / `amemv.com`）SSL_SYSCALL → ASR 无视频可下
+- ✅ 镜像 API（`api.douyin.wtf` / `api.xingzhige.com`）通畅 → 仍可拿元数据 + title + hashtags 做 subtitle 兜底
+
+**关 VPN 步骤**（让 ASR 主路径生效）：
+1. 退出 FlClash 和 Clash Verge 应用（菜单栏右上角图标 → Quit）
+2. 系统设置 → 网络 → Wi-Fi → 详细信息 → 代理 → 把 Web 代理 / 安全 Web 代理全关
+3. 调一次 `curl http://localhost:8000/api/video/ping` 让后端重置 `_direct_unavailable` 短路标记
+4. 验证：`curl -sS -X POST http://localhost:8000/api/video/extract -H 'Content-Type: application/json' -d '{"url":"<分享链接>"}'` → `source` 字段应为 `asr`
 
 ---
 
@@ -151,7 +204,7 @@ TAVILY_API_KEY=搜索用（可选）
 ## 本地运行方式
 
 ```bash
-# 后端启动
+# 后端启动（要先 cd backend 并激活 venv）
 cd backend && source .venv/bin/activate
 uvicorn main:app --reload --port 8000
 
@@ -161,9 +214,9 @@ cd backend && .venv/bin/pytest tests/ -v
 # 手动脚本（需要真实 API Key）
 python scripts/test_diagnosis_manual.py
 python scripts/test_questionnaire_manual.py
-python scripts/test_report_stream_manual.py  # plan-05 完成后可用
+python scripts/test_report_stream_manual.py
 
-# 前端启动（plan-07 完成后）
+# 前端启动
 cd frontend && npm run dev
 ```
 
@@ -182,6 +235,17 @@ cd frontend && npm run dev
 ```
 
 **前端直接 `fetch('/demo/demo_X.json')` 加载，不走后端**。
+
+**Demo 案例的完整链路**（核心：诊断走静态、问卷+报告走真实 AI）：
+
+| 阶段 | 走哪 | 兜底 |
+|---|---|---|
+| 视频内容 + 诊断结果 | 预置 JSON（不调后端） | — |
+| **个性化问卷生成** | `POST /api/questionnaire/generate`（真实 AI） | API 失败 → 用 JSON 里的 `questions` |
+| **报告流式生成** | `POST /api/report/generate`（SSE，真实 AI 按用户答案个性化） | API 失败 → 前端 `simulateStream` 推预置 markdown |
+| 分享页 | `GET /api/report/{id}`（真实存的报告） | `demo_X_xxxx` 前缀的 reportId → 渲染 `demoReports.ts` |
+
+`frontend/lib/demoReports.ts` 持有 3 份预置 markdown 报告，**仅作演示崩溃兜底**，正常路径下不会出现。
 
 | Demo | 类型 | 风险分 |
 |---|---|---|
@@ -208,10 +272,14 @@ cd frontend && npm run dev
 |---|---|
 | `backend/models/schemas.py` | 所有 Pydantic 数据模型 |
 | `backend/services/ai_client.py` | Claude 调用层（已正常工作）|
+| `backend/services/asr.py` | Whisper 转录（OPENAI_BASE_URL 中转兼容，自动补 `/v1`）|
+| `backend/services/video_extractor.py` | URL 解析全链路（直连+兜底 API+短路缓存）|
 | `backend/prompts/diagnosis.py` | 诊断 prompt |
 | `backend/prompts/questionnaire.py` | 问卷 prompt（已质量验证）|
 | `backend/prompts/report.py` | 报告 prompt |
-| `backend/services/report_store.py` | 内存报告存储 |
+| `backend/services/report_store.py` | 内存报告存储（重启丢失）|
+| `frontend/next.config.js` | Next 反代配置：`/api/*` → 127.0.0.1:8000 |
 | `frontend/public/demo/` | 3个 Demo 预缓存 JSON |
 | `frontend/lib/api.ts` | 前端 API 调用封装（SSE 流式逻辑在此）|
 | `frontend/lib/types.ts` | 前端 TypeScript 类型 |
+| `docs/douyin-video-extract-spec.md` | URL 解析技术档案（直连+兜底策略、CDN 实测、ASR 配置）|

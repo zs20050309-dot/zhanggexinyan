@@ -57,3 +57,11 @@ htmlcov/
 
 # 日志
 *.log
+
+# Next.js incremental build cache
+tsconfig.tsbuildinfo
+
+# 本地调试产物：截图、session 转录、临时记录
+session.md
+截屏*.png
+*-*-*-*-*.png

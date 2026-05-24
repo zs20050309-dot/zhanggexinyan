@@ -7,7 +7,9 @@ import type {
   SavedReport,
 } from './types'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// 默认走相对路径 → Next.js dev server 反代到后端（避开浏览器到 localhost:8000 的代理/TUN 拦截）
+// 仅在显式部署到独立域名时设置 NEXT_PUBLIC_API_BASE_URL
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -54,7 +56,17 @@ export async function diagnose(video: VideoContent): Promise<DiagnosisResult> {
     title: video.title,
     author: video.author,
     likes: video.likes,
+    play_count: video.play_count,
+    is_ad: video.is_ad,
+    with_shop_entry: video.with_shop_entry,
+    commerce_level: video.commerce_level,
+    creator_verified: video.creator_verified,
+    follower_count: video.follower_count,
   })
+}
+
+export async function pingVideoNetwork(): Promise<Record<string, unknown>> {
+  return get('/api/video/ping')
 }
 
 // ── 实时搜索 ──────────────────────────────────────────────
@@ -65,15 +77,20 @@ export async function search(query: string, context: string): Promise<SearchResu
 
 // ── 问卷 ──────────────────────────────────────────────────
 
+export interface QuestionnaireResult {
+  questions: Question[]
+  source: 'ai' | 'fallback'
+}
+
 export async function generateQuestionnaire(
   video_id: string,
   diagnosis: DiagnosisResult
-): Promise<Question[]> {
-  const res = await post<{ questions: Question[] }>('/api/questionnaire/generate', {
+): Promise<QuestionnaireResult> {
+  const res = await post<{ questions: Question[]; source?: 'ai' | 'fallback' }>('/api/questionnaire/generate', {
     video_id,
     diagnosis,
   })
-  return res.questions
+  return { questions: res.questions, source: res.source ?? 'ai' }
 }
 
 // ── 报告生成（SSE流式） ────────────────────────────────────

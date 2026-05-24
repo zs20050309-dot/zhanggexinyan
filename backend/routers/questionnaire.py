@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter
 from models.schemas import (
     QuestionnaireGenerateRequest,
@@ -9,9 +10,9 @@ from models.schemas import (
 from services.ai_client import call_claude
 from prompts import questionnaire as q_prompt
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# 兜底问题集，当AI生成失败时使用
 FALLBACK_QUESTIONS = [
     Question(id=1, text="你现在是什么阶段？", type="choice",
              options=["在校学生", "应届毕业生", "职场1-3年", "工作3年以上"]),
@@ -33,10 +34,10 @@ async def generate(req: QuestionnaireGenerateRequest) -> QuestionnaireGenerateRe
             expect_json=True,
         )
         questions = [Question(**q) for q in data]
-    except Exception:
-        questions = FALLBACK_QUESTIONS
-
-    return QuestionnaireGenerateResponse(questions=questions)
+        return QuestionnaireGenerateResponse(questions=questions, source="ai")
+    except Exception as e:
+        logger.warning("questionnaire AI 调用失败，降级到 FALLBACK: %s", e, exc_info=True)
+        return QuestionnaireGenerateResponse(questions=FALLBACK_QUESTIONS, source="fallback")
 
 
 @router.post("/next")

@@ -91,3 +91,24 @@ def test_extract_returns_video_content_when_successful(client):
     assert data["play_count"] == 300000
     assert data["with_shop_entry"] is True
     assert data["creator_verified"] == "知名博主"
+
+
+def test_ping_resets_direct_unavailable_shortcut():
+    """check_douyin_connectivity 必须在探测前重置 _direct_unavailable / _working_proxy。
+    场景：开 VPN 时直连失败 → 标记被设 True；用户关 VPN 后调一次 ping，
+    标记应清零，下次 extract 重新真实探测直连。
+    """
+    import asyncio
+    import services.video_extractor as ve
+    from services.video_extractor import check_douyin_connectivity
+
+    # 模拟：开 VPN 时多次失败，标记被设为 True
+    ve._direct_unavailable = True
+    ve._working_proxy = "http://example-proxy:7890"
+
+    # 直接调 service 函数；内部 httpx 探测会失败但不影响 side effect
+    asyncio.run(check_douyin_connectivity())
+
+    # 关键断言：短路标记必须被清零
+    assert ve._direct_unavailable is False, "ping 后 _direct_unavailable 应回到 False"
+    assert ve._working_proxy is False, "ping 后 _working_proxy 应回到 False（未探测）"

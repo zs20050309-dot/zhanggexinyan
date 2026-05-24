@@ -98,6 +98,7 @@ class QuestionnaireGenerateRequest(BaseModel):
 
 class QuestionnaireGenerateResponse(BaseModel):
     questions: list[Question]
+    source: Literal["ai", "fallback"] = "ai"
 
 class QuestionnaireNextRequest(BaseModel):
     video_id: str

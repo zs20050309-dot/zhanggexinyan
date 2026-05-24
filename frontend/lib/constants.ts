@@ -34,4 +34,4 @@ export const CONTENT_TYPE_DESCRIPTION: Record<string, string> = {
   pseudo_science_ad: '用权威身份或科学话术包装隐性商业目的，制造信任感',
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''

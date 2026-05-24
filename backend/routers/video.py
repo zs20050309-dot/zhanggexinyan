@@ -2,9 +2,15 @@ import uuid
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from models.schemas import VideoExtractRequest, VideoManualRequest, VideoContent
-from services.video_extractor import extract_video
+from services.video_extractor import extract_video, check_douyin_connectivity
 
 router = APIRouter()
+
+
+@router.get("/ping")
+async def ping():
+    """调试：检测本机到抖音域名的网络连通性"""
+    return await check_douyin_connectivity()
 
 
 @router.post("/extract")
