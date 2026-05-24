@@ -310,19 +310,9 @@ export default function HomePage() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-10 text-center py-24">
 
-          {/* Tag */}
-          <motion.div {...fade(0.05)} className="mb-8">
-            <span className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold tracking-wide select-none backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              AI 短视频内容分析工具
-              <span className="text-amber-500/40">·</span>
-              <span className="text-amber-500/70 font-mono text-[10px]">v0.1 Beta</span>
-            </span>
-          </motion.div>
-
           {/* Heading */}
           <motion.h1
-            {...fade(0.12)}
+            {...fade(0.08)}
             className="text-5xl sm:text-6xl lg:text-[5rem] font-black text-white leading-[1.22] tracking-tight mb-10"
           >
             <span className="block mb-2 sm:mb-3">这条视频说的，</span>
@@ -458,6 +448,20 @@ export default function HomePage() {
           <motion.p {...fade(0.36)} className="text-neutral-700 text-sm mt-2">
             ↓ 或滚动到下方「精选案例」直接体验
           </motion.p>
+
+          <motion.div {...fade(0.42)} className="mt-6">
+            <a
+              href="/guide"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-amber-400 transition-colors group"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-60 group-hover:opacity-100 transition-opacity">
+                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M6 4.5v0.01M6 6v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              第一次使用？查看 30 秒教程
+              <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+            </a>
+          </motion.div>
         </div>
 
         {/* Scroll indicator */}

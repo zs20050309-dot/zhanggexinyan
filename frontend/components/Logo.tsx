@@ -1,55 +1,88 @@
 // ─────────────────────────────────────────────────────────────
-// Logo — SVG eye + magnifier brand mark
-// 全站统一品牌组件。size: 'sm' (导航栏内嵌) | 'md' (默认)。
+// Logo — "长个心眼" 品牌标识
+// 设计语言：金色渐变眼睛 + 同心扫描环（审视/识破）
+// 去掉传统色块底，让 SVG 直接呼吸；纯黑底场景下更精致
 // ─────────────────────────────────────────────────────────────
 
-type Size = 'sm' | 'md'
+type Size = 'sm' | 'md' | 'lg'
 
 interface LogoProps {
   size?: Size
-  showBeta?: boolean
   showText?: boolean
 }
 
-const SIZE_MAP: Record<Size, { box: string; icon: number; text: string }> = {
-  sm: { box: 'w-7 h-7 rounded-lg', icon: 16, text: 'text-sm' },
-  md: { box: 'w-9 h-9 rounded-xl', icon: 20, text: 'text-base' },
+const SIZE_MAP: Record<Size, { svg: number; text: string; gap: string }> = {
+  sm: { svg: 24, text: 'text-sm', gap: 'gap-2' },
+  md: { svg: 32, text: 'text-base', gap: 'gap-2.5' },
+  lg: { svg: 44, text: 'text-xl', gap: 'gap-3' },
 }
 
-export function Logo({ size = 'md', showBeta = true, showText = true }: LogoProps) {
+export function Logo({ size = 'md', showText = true }: LogoProps) {
   const s = SIZE_MAP[size]
   return (
-    <div className="flex items-center gap-2.5 select-none">
-      <div
-        className={`${s.box} bg-amber-500 flex items-center justify-center shrink-0 shadow-[0_0_22px_rgba(245,158,11,0.45)]`}
+    <div className={`flex items-center ${s.gap} select-none`}>
+      <svg
+        width={s.svg}
+        height={s.svg}
+        viewBox="0 0 40 40"
+        fill="none"
+        className="shrink-0"
+        aria-label="长个心眼"
       >
-        <svg width={s.icon} height={s.icon} viewBox="0 0 20 20" fill="none">
-          <path
-            d="M2 10 C5 5, 15 5, 18 10 C15 15, 5 15, 2 10Z"
-            stroke="white"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <circle cx="10" cy="10" r="2.5" fill="white" />
-          <line
-            x1="13.5"
-            y1="13.5"
-            x2="17"
-            y2="17"
-            stroke="white"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+        <defs>
+          <radialGradient id="iris-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde68a" />
+            <stop offset="60%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#b45309" />
+          </radialGradient>
+          <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.35" />
+          </linearGradient>
+          <filter id="iris-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* outer scanning ring — 审视 */}
+        <circle
+          cx="20"
+          cy="20"
+          r="17"
+          fill="none"
+          stroke="url(#ring-grad)"
+          strokeWidth="1.2"
+          strokeDasharray="3 5"
+          opacity="0.85"
+        />
+        {/* eye almond shape */}
+        <path
+          d="M5 20 C 10 11, 30 11, 35 20 C 30 29, 10 29, 5 20 Z"
+          fill="none"
+          stroke="#fbbf24"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        {/* iris with radial gradient */}
+        <circle
+          cx="20"
+          cy="20"
+          r="5.5"
+          fill="url(#iris-grad)"
+          filter="url(#iris-glow)"
+        />
+        {/* pupil — 中心点 */}
+        <circle cx="20" cy="20" r="2.1" fill="#1a0f00" />
+        {/* highlight — 上方高光 */}
+        <circle cx="21.5" cy="18.5" r="0.9" fill="#fff8e1" opacity="0.95" />
+      </svg>
       {showText && (
         <span className={`font-bold text-white tracking-tight ${s.text}`}>
           长个心眼
-        </span>
-      )}
-      {showBeta && (
-        <span className="text-[10px] px-1.5 py-0.5 rounded-md border border-amber-500/40 text-amber-400 bg-amber-500/10 font-mono">
-          Beta
         </span>
       )}
     </div>

@@ -110,6 +110,8 @@ dyhackthon/
 | 网络模式三态 | `DOUYIN_NETWORK_MODE = auto / direct / fallback_only` + `DOUYIN_ALWAYS_PROBE_DIRECT` 自动重探 | ✅ 完成 |
 | 官方字幕优先 | 直连 meta 含 `subtitle_infos` 时，先下载官方 WebVTT/SRT/JSON 字幕，比 ASR 更快更准 | ✅ 完成 |
 | 反爬字段防误导 | `play_count=0` 和 `follower_count=null/0` 后端规范化为 None，前端 UI 不展示假数据 | ✅ 完成 |
+| Logo 重做 + 品牌精炼 | Logo 改为金色渐变 SVG 眼睛+扫描环（无色块底）；删 Beta tag、v0.1 标识、"关于产品"按钮；emoji 改 SVG icon | ✅ 完成 |
+| /guide 教程 landing | 新增使用教程页：工具定位 / 4 种内容类型详解（带例子）/ 4 步流程 / "我们不做什么" | ✅ 完成 |
 
 ```bash
 # 后端测试状态
@@ -125,9 +127,10 @@ cd frontend && npm run dev   # http://localhost:3000
 
 | 路由 | 页面 | 关键特性 |
 |---|---|---|
-| `/` | 首页 | Hero 多层光晕 + SVG 噪点 + 三步流程 + 真实链接解析 + Demo 卡片 |
-| `/analyze/[id]` | 诊断结果 | SVG 风险仪表盘 + 风险色调环境光晕 + 类型卡按类型上色 |
-| `/chat/[id]` | 个性化问卷 | AI 实时生成 + 滑动过渡 + 步骤指示器进 Navbar |
+| `/` | 首页 | Hero 多层光晕 + SVG 噪点 + 三步流程 + 真实链接解析 + Demo 卡片 + 教程入口 |
+| `/guide` | 使用教程 | Landing：Hero + 工具定位 + 4 种内容类型详解 + 4 步流程 + "我们不做什么" + CTA |
+| `/analyze/[id]` | 诊断结果 | SVG 风险仪表盘 + 风险色调环境光晕 + 类型卡按类型上色 + 数据来源提示 |
+| `/chat/[id]` | 个性化问卷 | AI 实时生成 + 滑动过渡 + 步骤指示器进 Navbar + AI fallback 提示 |
 | `/report` | 流式报告 | SSE 实时渲染 + 顶部流光进度条 + 完成态绿色对勾 |
 | `/share/[id]` | 分享报告 | 拉取 `getReport(id)` 只读展示 + "我也来分析一个" 引导 CTA |
 

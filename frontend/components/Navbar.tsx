@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Logo } from './Logo'
 
 // ─────────────────────────────────────────────────────────────
@@ -9,7 +10,6 @@ import { Logo } from './Logo'
 //  1. <Navbar variant="hero" />          首页：滚动后磨砂玻璃
 //  2. <Navbar backTo="/" />              二级页面：返回按钮 + Logo 居中
 //  3. <Navbar backTo="/" right={<...>}>  自定义右侧（如步骤指示器、按钮组）
-// 中间区域固定显示精简 Logo（无 Beta tag），保持品牌一致。
 // ─────────────────────────────────────────────────────────────
 
 type Variant = 'hero' | 'inner'
@@ -50,10 +50,12 @@ export function Navbar({
       >
         <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6 lg:px-10">
           <Logo />
-          <div className="flex items-center gap-8 text-sm text-neutral-500">
-            <button className="hover:text-white transition-colors duration-200">关于产品</button>
-            <button className="hover:text-white transition-colors duration-200">使用教程</button>
-          </div>
+          <Link
+            href="/guide"
+            className="text-sm text-neutral-400 hover:text-amber-400 transition-colors duration-200 font-medium"
+          >
+            使用教程
+          </Link>
         </div>
       </nav>
     )
@@ -84,7 +86,7 @@ export function Navbar({
             className="hover:opacity-80 transition-opacity"
             aria-label="回到首页"
           >
-            <Logo size="sm" showBeta={false} showText={false} />
+            <Logo size="sm" showText={false} />
           </button>
           {center}
         </div>

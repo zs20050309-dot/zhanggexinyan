@@ -176,29 +176,40 @@ export default function AnalyzePage() {
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-neutral-600">
             {videoContent.likes !== undefined && (
               <span className="flex items-center gap-1.5">
-                <span>👍</span> {formatCount(videoContent.likes)} 点赞
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-70">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 9V5a3 3 0 00-6 0v4M5 9h14l-1.5 11h-11L5 9z" />
+                </svg>
+                {formatCount(videoContent.likes)} 点赞
               </span>
             )}
             {videoContent.follower_count != null && (
               <span className="flex items-center gap-1.5">
-                <span>👤</span> {formatCount(videoContent.follower_count)} 粉丝
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-70">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H2v-2a4 4 0 015-3.87M9 12a4 4 0 100-8 4 4 0 000 8zm8-3a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+                {formatCount(videoContent.follower_count)} 粉丝
               </span>
             )}
             {videoContent.with_shop_entry && (
-              <span className="text-amber-500/70 flex items-center gap-1.5">🛒 已开通小店</span>
+              <span className="text-amber-500/70 flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                已开通小店
+              </span>
             )}
           </div>
           {/* Transcript source notice — 让用户知道当前分析所基于的数据完整度 */}
           {videoContent.source === 'subtitle' && (
             <div className="mt-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500/[0.06] border border-amber-500/15">
               <span className="text-[11px] text-amber-400/80">
-                ℹ 当前分析基于视频标题与话题标签（VPN 环境下无法拉取完整字幕）
+                当前分析基于视频标题与话题标签（VPN 环境下无法拉取完整字幕）
               </span>
             </div>
           )}
           {videoContent.source === 'manual' && (
             <div className="mt-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-neutral-500/[0.06] border border-neutral-500/15">
-              <span className="text-[11px] text-neutral-400">📝 当前分析基于你手动输入的文案</span>
+              <span className="text-[11px] text-neutral-400">当前分析基于你手动输入的文案</span>
             </div>
           )}
         </motion.div>

@@ -170,7 +170,7 @@ export default function SharePage() {
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
           <div className="relative">
             <div className="flex items-center justify-center mb-5">
-              <Logo showBeta={false} />
+              <Logo />
             </div>
             <h3 className="text-xl font-black text-white tracking-tight mb-2">看完了？换你来一份</h3>
             <p className="text-sm text-neutral-500 leading-relaxed mb-7 max-w-xs mx-auto">
