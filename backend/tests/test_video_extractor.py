@@ -69,5 +69,87 @@ def test_meta_from_fallback_api():
     meta = _meta_from_fallback_api(payload)
     assert meta is not None
     assert meta["aweme_id"] == "7641252398422352293"
+    assert meta["_meta_source"] == "fallback"
     assert meta["author"]["nickname"] == "测试作者"
     assert meta["statistics"]["digg_count"] == 100
+
+
+def test_parse_subtitle_webvtt():
+    from services.video_extractor import _parse_subtitle_payload
+
+    raw = "WEBVTT\n\n1\n00:00:01.000 --> 00:00:03.000\n你好世界\n"
+    assert _parse_subtitle_payload(raw) == "你好世界"
+
+
+def test_subtitle_urls_from_meta():
+    from services.video_extractor import _subtitle_urls_from_meta
+
+    meta = {
+        "video": {
+            "subtitle_infos": [
+                {"url": {"url_list": ["https://example.com/sub.json"]}},
+            ]
+        }
+    }
+    assert _subtitle_urls_from_meta(meta) == ["https://example.com/sub.json"]
+
+
+# ─── _build_video_content 字段映射修复 ─────────────────────────
+
+def test_build_uses_mplatform_followers_count_when_present():
+    """直连抖音 meta 里粉丝数字段叫 mplatform_followers_count，不是 follower_count。"""
+    from services.video_extractor import _build_video_content
+
+    meta = {
+        "aweme_id": "1234567890123456789",
+        "desc": "测试视频",
+        "author": {
+            "nickname": "测试作者",
+            "mplatform_followers_count": 320000,
+        },
+        "statistics": {"digg_count": 100},
+    }
+    vc = _build_video_content(meta, "transcript", "asr")
+    assert vc.follower_count == 320000, "应抽 mplatform_followers_count，得到 None 说明字段映射错了"
+
+
+def test_build_falls_back_to_follower_count_for_legacy_meta():
+    """xingzhige fallback API meta 用 follower_count 字段名，也要兼容。"""
+    from services.video_extractor import _build_video_content
+
+    meta = {
+        "aweme_id": "1234567890123456789",
+        "desc": "测试视频",
+        "author": {"nickname": "测试作者", "follower_count": 50000},
+        "statistics": {"digg_count": 100},
+    }
+    vc = _build_video_content(meta, "transcript", "subtitle")
+    assert vc.follower_count == 50000
+
+
+def test_build_normalizes_zero_play_count_to_none():
+    """抖音 web API 反爬 → play_count 恒为 0。展示 '0 播放' 误导用户，应转为 None。"""
+    from services.video_extractor import _build_video_content
+
+    meta = {
+        "aweme_id": "1",
+        "desc": "x",
+        "author": {"nickname": "x"},
+        "statistics": {"digg_count": 100, "play_count": 0},
+    }
+    vc = _build_video_content(meta, "t", "asr")
+    assert vc.play_count is None, "play_count=0 是抖音反爬假数据，应规范化为 None 不展示"
+
+
+def test_build_preserves_real_play_count_when_nonzero():
+    """如果未来抖音放开 play_count 字段（不是 0），保留真实值。"""
+    from services.video_extractor import _build_video_content
+
+    meta = {
+        "aweme_id": "1",
+        "desc": "x",
+        "author": {"nickname": "x"},
+        "statistics": {"digg_count": 100, "play_count": 50000},
+    }
+    vc = _build_video_content(meta, "t", "asr")
+    assert vc.play_count == 50000

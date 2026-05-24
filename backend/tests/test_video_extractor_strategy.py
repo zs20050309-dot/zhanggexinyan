@@ -12,9 +12,13 @@ import services.video_extractor as ve
 from services.video_extractor import _resolve_aweme_id, _fetch_aweme_metadata
 
 
-# ─── 测试前重置全局短路标记 ─────────────────────────────────
+# ─── 测试前重置全局短路标记 + 强制 auto 模式 ─────────────────
+# 这些测试断言"直连失败 → 走 fallback API"行为，要求 DOUYIN_NETWORK_MODE=auto。
+# 用户 .env 可能设了 direct/fallback_only，会绕过 fallback 让测试跪。
 @pytest.fixture(autouse=True)
-def reset_direct_cache():
+def reset_direct_cache(monkeypatch):
+    monkeypatch.setenv("DOUYIN_NETWORK_MODE", "auto")
+    monkeypatch.delenv("DOUYIN_ALWAYS_PROBE_DIRECT", raising=False)
     ve._direct_unavailable = False
     ve._working_proxy = False
     yield

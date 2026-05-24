@@ -179,12 +179,7 @@ export default function AnalyzePage() {
                 <span>👍</span> {formatCount(videoContent.likes)} 点赞
               </span>
             )}
-            {videoContent.play_count !== undefined && (
-              <span className="flex items-center gap-1.5">
-                <span>▶</span> {formatCount(videoContent.play_count)} 播放
-              </span>
-            )}
-            {videoContent.follower_count !== undefined && (
+            {videoContent.follower_count != null && (
               <span className="flex items-center gap-1.5">
                 <span>👤</span> {formatCount(videoContent.follower_count)} 粉丝
               </span>

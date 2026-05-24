@@ -107,11 +107,14 @@ dyhackthon/
 | Next.js 反代 | `/api/*` 由 Next dev server `rewrites` → `127.0.0.1:8000`，避开 Clash 对 localhost 的拦截 | ✅ 完成 |
 | 问卷可观测 | `QuestionnaireGenerateResponse.source = 'ai' \| 'fallback'`，AI 失败 `logger.warning(exc_info=True)` 不再静默 | ✅ 完成 |
 | /ping 重置 | `GET /api/video/ping` 现在重置 `_direct_unavailable` 短路标记，用户关 VPN 后无需重启进程即可恢复直连探测 | ✅ 完成 |
+| 网络模式三态 | `DOUYIN_NETWORK_MODE = auto / direct / fallback_only` + `DOUYIN_ALWAYS_PROBE_DIRECT` 自动重探 | ✅ 完成 |
+| 官方字幕优先 | 直连 meta 含 `subtitle_infos` 时，先下载官方 WebVTT/SRT/JSON 字幕，比 ASR 更快更准 | ✅ 完成 |
+| 反爬字段防误导 | `play_count=0` 和 `follower_count=null/0` 后端规范化为 None，前端 UI 不展示假数据 | ✅ 完成 |
 
 ```bash
 # 后端测试状态
 cd backend && .venv/bin/pytest tests/ -q
-# 结果：78 passed in 7.87s（含网络真实探测的 ping reset 测试 ~7s）
+# 结果：84 passed in 2.83s（含网络真实探测的 ping reset 测试 ~7s）
 
 # 启动方式（两个终端分别运行）
 cd backend && source .venv/bin/activate && uvicorn main:app --reload --port 8000
@@ -185,11 +188,38 @@ TAVILY_API_KEY=搜索用（可选）
 - ❌ 抖音视频 CDN（`douyinvod.com` / `amemv.com`）SSL_SYSCALL → ASR 无视频可下
 - ✅ 镜像 API（`api.douyin.wtf` / `api.xingzhige.com`）通畅 → 仍可拿元数据 + title + hashtags 做 subtitle 兜底
 
-**关 VPN 步骤**（让 ASR 主路径生效）：
+### 三种网络模式（`DOUYIN_NETWORK_MODE`）
+
+| 模式 | 行为 | 适用场景 |
+|---|---|---|
+| `auto`（默认）| 直连优先 → 失败走镜像 API 兜底 | 普通环境 |
+| `direct` | **仅直连抖音**，拒绝走镜像兜底；可拿字幕 + ASR | 关 VPN / Clash 抖音 DIRECT 分流 |
+| `fallback_only` | **仅走镜像 API**，跳过 ASR，强制走描述文案 | VPN 开着但镜像可用时演示降级 |
+
+配套环境变量：
+- `DOUYIN_ALWAYS_PROBE_DIRECT=true` — 每次 extract 前重置 `_direct_unavailable` 短路标记，无需手动调 `/ping`
+- `SKIP_ASR=true` — 强制跳过 Whisper 用 desc 兜底（更快但内容粗）
+
+### 关 VPN 步骤（让 ASR 主路径 + 字幕生效）
 1. 退出 FlClash 和 Clash Verge 应用（菜单栏右上角图标 → Quit）
 2. 系统设置 → 网络 → Wi-Fi → 详细信息 → 代理 → 把 Web 代理 / 安全 Web 代理全关
-3. 调一次 `curl http://localhost:8000/api/video/ping` 让后端重置 `_direct_unavailable` 短路标记
-4. 验证：`curl -sS -X POST http://localhost:8000/api/video/extract -H 'Content-Type: application/json' -d '{"url":"<分享链接>"}'` → `source` 字段应为 `asr`
+3. `.env` 设 `DOUYIN_NETWORK_MODE=direct` + `DOUYIN_ALWAYS_PROBE_DIRECT=true`
+4. **重启后端**（kill 旧进程 + 重新启动，让新代码 + 新 env 生效）
+5. 验证：`curl http://localhost:8000/api/video/ping` 应返回 `direct_douyin_ok: true`
+6. 端到端：`curl -X POST http://localhost:8000/api/video/extract -H 'Content-Type: application/json' -d '{"url":"<分享链接>"}'` → `source` 应为 `asr`，transcript 200+ 字真实口播
+
+### 抖音 web API 反爬限制（已确认拿不到的字段）
+
+| 字段 | 抖音返回 | 处理 |
+|---|---|---|
+| `statistics.play_count` | 恒为 `0` | 后端规范化为 `None`，前端 UI 不展示 |
+| `author.mplatform_followers_count` | 恒为 `0` | 同上，前端 `!= null` 守卫 |
+| `author.follower_count` | 永远 `null` | — |
+| `author.followers_detail` | 永远 `null` | — |
+| `digg_count`（点赞）| ✅ 真实 | 正常展示 |
+| `comment_count` / `share_count` / `collect_count` | ✅ 真实 | schema 有，UI 未用 |
+
+Demo 卡片（`frontend/public/demo/demo_*.json`）的 `follower_count` 是**手写演示数据**，会正常展示；真实 URL 解析时这些字段为 None 不显示。
 
 ---
 
